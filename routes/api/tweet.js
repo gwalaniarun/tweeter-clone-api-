@@ -42,5 +42,50 @@ router.post('/',
     }
 );
 
+//@type POST
+//@route /api/tweet/
+//@desc Like by user
+//@access PRIVATE
+
+//steps
+//1. Find user
+//2. Find tweet id
+//3. If user has alerady liked?
+//4. If not like then like....
+
+router.post('/like/:id', passport.authenticate('jwt', {
+        session: false
+    }),
+    (req, res) => {
+        Person.findOne({
+                user: req.user.id
+            })
+            .then(person => {
+                Tweet.findById(req.params.id)
+                    .then(tweet => {
+                        //finding if user alerady liked.
+                        if (tweet.likes.filter(
+                                likes => likes.user.toString() === req.user.id.toString()
+                            ).length > 0) {
+                            return res.status(400).json({
+                                noupvote: 'user alerady liked'
+                            })
+                        }
+
+                        tweet.likes.unshift({
+                            user: req.user.id
+                        });
+
+                        tweet.save()
+                            .then(tweet => res.json(
+                                tweet
+                            )).catch(err => console.log(err));
+                    })
+                    .catch('Error getting question from Id' + err);
+            })
+            .catch(err => console.log('Error for finding user' + err))
+    });
+
+
 
 module.exports = router;
